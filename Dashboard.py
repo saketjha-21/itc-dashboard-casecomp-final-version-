@@ -224,12 +224,12 @@ is_kily_activated = st.sidebar.toggle("**Activate Kily AI Engine**", value=True,
 df_kily = generate_synthetic_data(is_kily_activated=True)
 df_old = generate_synthetic_data(is_kily_activated=False)
 df_display = df_kily if is_kily_activated else df_old
-page = st.sidebar.radio("Navigation", ("Command Center", "Insights & Action Center", "Strategic Campaign Planner", "Competitive Intelligence", "SKU Deep-Dive"))
+page = st.sidebar.radio("Navigation", ("Agentic Orchestrator", "Insights & Action Center", "Strategic Campaign Planner", "Competitive Intelligence", "SKU Deep-Dive"))
 st.sidebar.markdown("---")
 st.sidebar.info("This is a functional POC for ITC's 'Interrobang' competition. All data is synthetically generated.")
 
-if page == "Command Center":
-    st.title("📈 Command Center")
+if page == "Agentic Orchestrator":
+    st.title("📈 Agentic Orchestrator")
     st.markdown("### The Ultimate KPI: One Score to Rule Them All")
     score_col1, score_col2 = st.columns(2)
     with score_col1:
@@ -605,3 +605,4 @@ elif page == "SKU Deep-Dive":
             st.subheader(f"ROAS Trend")
             roas_trend_df = sku_df.groupby(sku_df['Date'].dt.date)['ROAS'].mean().reset_index()
             st.plotly_chart(px.line(roas_trend_df, x='Date', y='ROAS', title=f"Kily Drives Consistent ROAS" if is_kily_activated else f"Volatile Daily ROAS (Baseline)", markers=True).update_layout(template="plotly_dark", height=400), use_container_width=True)
+
