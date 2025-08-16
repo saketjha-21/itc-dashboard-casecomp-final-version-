@@ -9,7 +9,7 @@ import random
 from datetime import date, timedelta
 
 # ==============================================================================
-# --- 1. PAGE CONFIGURATION & AESTHETICS ---
+# --- 1. PAGE CONFIGURATION & AESTHETICS (MODIFIED FOR KPI CARDS) ---
 # ==============================================================================
 st.set_page_config(layout="wide", page_title="Kily Agentic AI Engine for ITC",
                    page_icon="https://www.itcportal.com/assets/images/favicon.ico")
@@ -58,8 +58,8 @@ st.markdown("""
         color: #FFFFFF;
         box-shadow: 0 0 15px #4B8BBE;
     }
-
-    /* --- NEW: CSS FOR AMPLIFIED KPI CARDS --- */
+    
+    /* --- NEW CSS FOR AMPLIFIED KPI CARDS --- */
     div[data-testid="stMetric"] {
         background-color: rgba(38, 39, 48, 0.3);
         border: 1px solid rgba(255, 255, 255, 0.1);
@@ -79,6 +79,7 @@ st.markdown("""
     }
     /* --- END NEW CSS --- */
 
+    /* Custom style for the agent log */
     .agent-log {
         background-color: #1a1a2e;
         color: #e0e0e0;
@@ -95,34 +96,12 @@ st.markdown("""
     .agent-log .agent-creative { color: #a277ff; }
     .agent-log .agent-bidding { color: #ff77a8; }
     .agent-log .agent-status { color: #20c997; }
-    .log-container-blue {
-        background-color: #1f2c3e;
-        border-left: 5px solid #3b82f6;
-        padding: 1rem;
-        border-radius: 5px;
-        margin-bottom: 10px;
-    }
-    .log-container-red {
-        background-color: #3e1f1f;
-        border-left: 5px solid #f63b3b;
-        padding: 1rem;
-        border-radius: 5px;
-        margin-bottom: 10px;
-    }
-    .log-container-yellow {
-        background-color: #3e3a1f;
-        border-left: 5px solid #f6c83b;
-        padding: 1rem;
-        border-radius: 5px;
-        margin-bottom: 10px;
-    }
-    .log-container-green {
-        background-color: #1f3e2c;
-        border-left: 5px solid #3bf68a;
-        padding: 1rem;
-        border-radius: 5px;
-        margin-bottom: 10px;
-    }
+
+    /* Custom styles for new AI Logbook */
+    .log-container-blue { background-color: #1f2c3e; border-left: 5px solid #3b82f6; padding: 1rem; border-radius: 5px; margin-bottom: 10px; }
+    .log-container-red { background-color: #3e1f1f; border-left: 5px solid #f63b3b; padding: 1rem; border-radius: 5px; margin-bottom: 10px; }
+    .log-container-yellow { background-color: #3e3a1f; border-left: 5px solid #f6c83b; padding: 1rem; border-radius: 5px; margin-bottom: 10px; }
+    .log-container-green { background-color: #1f3e2c; border-left: 5px solid #3bf68a; padding: 1rem; border-radius: 5px; margin-bottom: 10px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -138,37 +117,19 @@ COMPETITOR_MAPPING = {
     "ITC Master Chef": {"name": "McCain", "sku": "Smiles"}
 }
 
-
 # ==============================================================================
 # --- 3. DATA GENERATION ENGINE (STABLE) ---
 # ==============================================================================
 @st.cache_data(ttl=3600)
 def generate_synthetic_data(is_kily_activated: bool):
-    brands_skus = {
-        "Aashirvaad": ["Select Atta", "Multigrain Atta", "Iodized Salt", "Turmeric Powder", "Organic Tur Dal",
-                       "Gulab Jamun Mix"],
-        "Sunfeast": ["Dark Fantasy Choco Fills", "Mom's Magic Cashew", "Farmlite Oats & Almonds",
-                     "Bounce Cream Biscuit", "Marie Light"],
-        "YiPPee!": ["Magic Masala Noodles", "Power Up Atta Noodles", "Creamy Pasta"],
-        "Bingo!": ["Mad Angles", "Tedhe Medhe", "Original Style Potato Chips"],
-        "B Natural": ["Mixed Fruit Juice", "Guava Juice", "Tender Coconut Water"],
-        "ITC Master Chef": ["Classic Aloo Tikki", "Chilli Garlic Potato Shots", "Chicken Nuggets"]
-    }
+    brands_skus = { "Aashirvaad": ["Select Atta", "Multigrain Atta"], "Sunfeast": ["Dark Fantasy Choco Fills", "Mom's Magic Cashew"], "YiPPee!": ["Magic Masala Noodles", "Power Up Atta Noodles"], "Bingo!": ["Mad Angles", "Tedhe Medhe"], "B Natural": ["Mixed Fruit Juice", "Guava Juice"], "ITC Master Chef": ["Classic Aloo Tikki", "Chicken Nuggets"] }
     platforms = ["Blinkit", "Zepto", "Swiggy Instamart", "Flipkart", "Amazon"]
     cities = ["Mumbai", "Delhi", "Bangalore", "Hyderabad", "Kolkata"]
     dayparts = ["Breakfast", "Lunch", "Snacks", "Dinner"]
-
-    config = {
-        "old_way": {"roas_mean": 1.8, "roas_std": 0.8, "oos_prob": 0.10, "cvr_lift": 0.0,
-                    "content_score_range": (4, 7)},
-        "kily_way": {"roas_mean": 2.8, "roas_std": 0.4, "oos_prob": 0.005, "cvr_lift": 0.15,
-                     "content_score_range": (8, 11)}
-    }
+    config = { "old_way": {"roas_mean": 1.8, "roas_std": 0.8, "oos_prob": 0.10, "cvr_lift": 0.0, "content_score_range": (4, 7)}, "kily_way": {"roas_mean": 2.8, "roas_std": 0.4, "oos_prob": 0.005, "cvr_lift": 0.15, "content_score_range": (8, 11)} }
     mode = "kily_way" if is_kily_activated else "old_way"
-
     data = []
     date_range = pd.to_datetime(pd.date_range(end=pd.Timestamp.now(), periods=30))
-
     for date in date_range:
         daily_volatility = np.random.uniform(0.85, 1.15)
         for brand, skus in brands_skus.items():
@@ -183,22 +144,16 @@ def generate_synthetic_data(is_kily_activated: bool):
                             impressions = np.random.randint(2500, 40000)
                             clicks = int(impressions * np.random.uniform(0.005, 0.05))
                             conversions = int(clicks * effective_cvr)
-                            noise = np.random.normal(0, 0.15)
-                            roas = max(0.5, base_roas + noise)
+                            roas = max(0.5, base_roas + np.random.normal(0, 0.15))
                             direct_sales = spend * roas
-                            is_oos = np.random.choice([True, False],
-                                                      p=[config[mode]["oos_prob"], 1 - config[mode]["oos_prob"]])
+                            is_oos = np.random.choice([True, False], p=[config[mode]["oos_prob"], 1 - config[mode]["oos_prob"]])
                             content_score = np.random.randint(*config[mode]["content_score_range"])
-                            data.append(
-                                [date, brand, sku, platform, city, daypart, spend, impressions, clicks, conversions,
-                                 direct_sales, roas, is_oos, content_score])
-    columns = ["Date", "Brand", "SKU", "Platform", "City", "Daypart", "Spend", "Impressions", "Clicks", "Conversions",
-               "Direct Sales", "ROAS", "Is OOS", "Content Score"]
+                            data.append([date, brand, sku, platform, city, daypart, spend, impressions, clicks, conversions, direct_sales, roas, is_oos, content_score])
+    columns = ["Date", "Brand", "SKU", "Platform", "City", "Daypart", "Spend", "Impressions", "Clicks", "Conversions", "Direct Sales", "ROAS", "Is OOS", "Content Score"]
     return pd.DataFrame(data, columns=columns)
 
-
 # ==============================================================================
-# --- 4. PDF GENERATION UTILITY (MODIFIED) ---
+# --- 4. PDF GENERATION UTILITY (STABLE) ---
 # ==============================================================================
 def create_pdf_summary(kpis_kily, kpis_old):
     pdf = FPDF()
@@ -232,27 +187,21 @@ def create_pdf_summary(kpis_kily, kpis_old):
     pdf.cell(80, 8, "Total Direct Sales (Rs.)", 1, 0, 'L')
     pdf.cell(35, 8, f"{kpis_old['sales']:,.0f}", 1, 0, 'R')
     pdf.cell(35, 8, f"{kpis_kily['sales']:,.0f}", 1, 0, 'R')
-    pdf.set_font("Arial", 'B', 10);
-    pdf.set_text_color(0, 128, 0)
-    pdf.cell(35, 8, f"+{revenue_gain:,.0f}", 1, 1, 'R');
-    pdf.set_text_color(0, 0, 0)
+    pdf.set_font("Arial", 'B', 10); pdf.set_text_color(0, 128, 0)
+    pdf.cell(35, 8, f"+{revenue_gain:,.0f}", 1, 1, 'R'); pdf.set_text_color(0, 0, 0)
     pdf.set_font("Arial", '', 10)
     pdf.cell(80, 8, "Blended ROAS", 1, 0, 'L')
     pdf.cell(35, 8, f"{kpis_old['roas']:.2f}x", 1, 0, 'R')
     pdf.cell(35, 8, f"{kpis_kily['roas']:.2f}x", 1, 0, 'R')
-    pdf.set_font("Arial", 'B', 10);
-    pdf.set_text_color(0, 128, 0)
-    pdf.cell(35, 8, f"+{uplift:.1f}%", 1, 1, 'R');
-    pdf.set_text_color(0, 0, 0)
+    pdf.set_font("Arial", 'B', 10); pdf.set_text_color(0, 128, 0)
+    pdf.cell(35, 8, f"+{uplift:.1f}%", 1, 1, 'R'); pdf.set_text_color(0, 0, 0)
     conv_gain = kpis_kily['conv'] - kpis_old['conv']
     pdf.set_font("Arial", '', 10)
     pdf.cell(80, 8, "Total Conversions", 1, 0, 'L')
     pdf.cell(35, 8, f"{kpis_old['conv']:,}", 1, 0, 'R')
     pdf.cell(35, 8, f"{kpis_kily['conv']:,}", 1, 0, 'R')
-    pdf.set_font("Arial", 'B', 10);
-    pdf.set_text_color(0, 128, 0)
-    pdf.cell(35, 8, f"+{conv_gain:,}", 1, 1, 'R');
-    pdf.set_text_color(0, 0, 0)
+    pdf.set_font("Arial", 'B', 10); pdf.set_text_color(0, 128, 0)
+    pdf.cell(35, 8, f"+{conv_gain:,}", 1, 1, 'R'); pdf.set_text_color(0, 0, 0)
     pdf.ln(5)
     pdf.set_font("Arial", 'B', 14)
     pdf.cell(0, 10, "3. Key Impact Drivers & Conclusion", 0, 1, 'L')
@@ -265,29 +214,22 @@ def create_pdf_summary(kpis_kily, kpis_old):
     pdf.multi_cell(0, 6, conclusion_text)
     return bytes(pdf.output(dest='S'))
 
-
 # ==============================================================================
 # --- 5. THE APP LOGIC STARTS HERE ---
 # ==============================================================================
-
 st.sidebar.title("Kily Agentic AI Engine")
 st.sidebar.header("ITC Foods")
 st.sidebar.markdown("---")
-is_kily_activated = st.sidebar.toggle("**Activate Kily AI Engine**", value=True,
-                                      help="Toggle to see the direct impact of the Kily Engine vs. the manual baseline.")
+is_kily_activated = st.sidebar.toggle("**Activate Kily AI Engine**", value=True, help="Toggle to see the direct impact of the Kily Engine vs. the manual baseline.")
 df_kily = generate_synthetic_data(is_kily_activated=True)
 df_old = generate_synthetic_data(is_kily_activated=False)
 df_display = df_kily if is_kily_activated else df_old
-page = st.sidebar.radio("Navigation",
-                        ("Agentic Orchestrator", "Insights & Action Center", "Strategic Campaign Planner",
-                         "Competitive Intelligence", "SKU Deep-Dive"))
+page = st.sidebar.radio("Navigation", ("Command Center", "Insights & Action Center", "Strategic Campaign Planner", "Competitive Intelligence", "SKU Deep-Dive"))
 st.sidebar.markdown("---")
 st.sidebar.info("This is a functional POC for ITC's 'Interrobang' competition. All data is synthetically generated.")
 
-if page == "Agentic Orchestrator":
-    st.title("Agentic Orchestrator")
-
-    # --- KILY EFFICIENCY SCORE ---
+if page == "Command Center":
+    st.title("📈 Command Center")
     st.markdown("### The Ultimate KPI: One Score to Rule Them All")
     score_col1, score_col2 = st.columns(2)
     with score_col1:
@@ -299,15 +241,9 @@ if page == "Agentic Orchestrator":
             score = 55
             st.metric("Kily Efficiency Score", f"{score}/100", "Activate Kily for Uplift", delta_color="off")
     with score_col2:
-        st.write("""
-        This score is a composite metric reflecting the overall health and efficiency of your marketing operations. 
-        It synthesizes **ROAS**, **OOS prevention**, **Content Quality**, and **CPA** into a single, undeniable number.
-        """)
+        st.write("""This score is a composite metric reflecting the overall health and efficiency of your marketing operations. It synthesizes **ROAS**, **OOS prevention**, **Content Quality**, and **CPA** into a single, undeniable number.""")
     st.markdown("---")
-
-    st.markdown(
-        "A strategic cockpit for oversight and insight into ITC's performance marketing for the **Last 30 Days**.")
-
+    st.markdown("#### Detailed Performance Indicators (Last 30 Days)")
     fcol1, fcol2, fcol3 = st.columns(3)
     with fcol1:
         city_filter = st.selectbox("Filter by City", ["All Cities"] + list(df_display['City'].unique()))
@@ -315,192 +251,119 @@ if page == "Agentic Orchestrator":
         platform_filter = st.selectbox("Filter by Platform", ["All Platforms"] + list(df_display['Platform'].unique()))
     with fcol3:
         brand_filter = st.selectbox("Filter by Brand", ["All Brands"] + list(df_display['Brand'].unique()))
-
     df_filtered = df_display.copy()
     df_kily_filtered = df_kily.copy()
     df_old_filtered = df_old.copy()
     if city_filter != "All Cities":
-        df_filtered = df_filtered[df_filtered['City'] == city_filter]
-        df_kily_filtered = df_kily_filtered[df_kily_filtered['City'] == city_filter]
-        df_old_filtered = df_old_filtered[df_old_filtered['City'] == city_filter]
+        df_kily_filtered = df_kily[df_kily['City'] == city_filter]
+        df_old_filtered = df_old[df_old['City'] == city_filter]
     if platform_filter != "All Platforms":
-        df_filtered = df_filtered[df_filtered['Platform'] == platform_filter]
         df_kily_filtered = df_kily_filtered[df_kily_filtered['Platform'] == platform_filter]
         df_old_filtered = df_old_filtered[df_old_filtered['Platform'] == platform_filter]
     if brand_filter != "All Brands":
-        df_filtered = df_filtered[df_filtered['Brand'] == brand_filter]
         df_kily_filtered = df_kily_filtered[df_kily_filtered['Brand'] == brand_filter]
         df_old_filtered = df_old_filtered[df_old_filtered['Brand'] == brand_filter]
-
-    sales_kily = df_kily_filtered['Direct Sales'].sum()
-    spend_kily = df_kily_filtered['Spend'].sum()
-    conv_kily = df_kily_filtered['Conversions'].sum()
+    sales_kily, spend_kily, conv_kily = df_kily_filtered['Direct Sales'].sum(), df_kily_filtered['Spend'].sum(), df_kily_filtered['Conversions'].sum()
     roas_kily = sales_kily / spend_kily if spend_kily > 0 else 0
     cpa_kily = spend_kily / conv_kily if conv_kily > 0 else 0
-    sales_old = df_old_filtered['Direct Sales'].sum()
-    spend_old = df_old_filtered['Spend'].sum()
-    conv_old = df_old_filtered['Conversions'].sum()
+    sales_old, spend_old, conv_old = df_old_filtered['Direct Sales'].sum(), df_old_filtered['Spend'].sum(), df_old_filtered['Conversions'].sum()
     roas_old = sales_old / spend_old if spend_old > 0 else 0
     cpa_old = spend_old / conv_old if conv_old > 0 else 0
-
     kpi1, kpi2, kpi3, kpi4, kpi5 = st.columns(5)
     if is_kily_activated:
-        kpi1.metric("Total Direct Sales", f"₹{sales_kily:,.0f}", delta=f"₹{(sales_kily - sales_old):,.0f} vs Baseline")
-        kpi2.metric("Blended ROAS", f"{roas_kily:.2f}x", delta=f"{roas_kily - roas_old:.2f}x vs Baseline")
-        kpi3.metric("Total Conversions", f"{conv_kily:,}", delta=f"{(conv_kily - conv_old):,} vs Baseline",
-                    help="A 'conversion' is a successful purchase.")
-        kpi4.metric("Cost Per Acquisition (CPA)", f"₹{cpa_kily:,.2f}", delta=f"₹{cpa_kily - cpa_old:,.2f} vs Baseline",
-                    delta_color="inverse")
-        kpi5.metric("Total Spend", f"₹{spend_kily:,.0f}", delta=f"₹{spend_kily - spend_old:,.0f} vs Baseline")
+        kpi1.metric("Total Direct Sales", f"₹{sales_kily:,.0f}", f"₹{(sales_kily - sales_old):,.0f} vs Baseline")
+        kpi2.metric("Blended ROAS", f"{roas_kily:.2f}x", f"{roas_kily - roas_old:.2f}x vs Baseline")
+        kpi3.metric("Total Conversions", f"{conv_kily:,}", f"{(conv_kily - conv_old):,} vs Baseline", help="A 'conversion' is a successful purchase.")
+        kpi4.metric("Cost Per Acquisition", f"₹{cpa_kily:,.2f}", f"₹{cpa_kily - cpa_old:,.2f} vs Baseline", delta_color="inverse")
+        kpi5.metric("Total Spend", f"₹{spend_kily:,.0f}", f"₹{spend_kily - spend_old:,.0f} vs Baseline")
     else:
         kpi1.metric("Total Direct Sales", f"₹{sales_old:,.0f}")
         kpi2.metric("Blended ROAS", f"{roas_old:.2f}x")
         kpi3.metric("Total Conversions", f"{conv_old:,}", help="A 'conversion' is a successful purchase.")
-        kpi4.metric("Cost Per Acquisition (CPA)", f"₹{cpa_old:,.2f}")
+        kpi4.metric("Cost Per Acquisition", f"₹{cpa_old:,.2f}")
         kpi5.metric("Total Spend", f"₹{spend_old:,.0f}")
-
     st.write("")
-    pdf_data = create_pdf_summary({"sales": sales_kily, "roas": roas_kily, "conv": conv_kily},
-                                  {"sales": sales_old, "roas": roas_old, "conv": conv_old})
-    st.download_button("Download Performance Brief (PDF)", data=pdf_data, file_name="ITC_Kily_Performance_Brief.pdf",
-                       use_container_width=True)
+    pdf_data = create_pdf_summary({"sales": sales_kily, "roas": roas_kily, "conv": conv_kily}, {"sales": sales_old, "roas": roas_old, "conv": conv_old})
+    st.download_button("📄 Download Performance Brief (PDF)", data=pdf_data, file_name="ITC_Kily_Performance_Brief.pdf", use_container_width=True)
     st.markdown("---")
-
-    kily_time_perf = df_kily_filtered.groupby(df_kily_filtered['Date'].dt.date)['Direct Sales'].sum().rename(
-        'Kily Performance')
-    old_time_perf = df_old_filtered.groupby(df_old_filtered['Date'].dt.date)['Direct Sales'].sum().rename(
-        'Baseline Performance')
+    kily_time_perf = df_kily_filtered.groupby(df_kily_filtered['Date'].dt.date)['Direct Sales'].sum().rename('Kily Performance')
+    old_time_perf = df_old_filtered.groupby(df_old_filtered['Date'].dt.date)['Direct Sales'].sum().rename('Baseline Performance')
     time_perf_df = pd.concat([kily_time_perf, old_time_perf], axis=1).reset_index()
     sales_uplift_percentage = ((sales_kily / sales_old) - 1) * 100 if sales_old > 0 else 100
     time_title_new = f"Daily Sales: Kily Driving a +{sales_uplift_percentage:.1f}% Uplift" if is_kily_activated else "Daily Sales: Baseline vs. Kily Potential"
-
     fig_time_new = go.Figure()
-    fig_time_new.add_trace(
-        go.Scatter(x=time_perf_df['Date'], y=time_perf_df['Baseline Performance'], mode='lines', name='Baseline',
-                   line=dict(color='#FF4B4B', dash='dash')))
-    fig_time_new.add_trace(
-        go.Scatter(x=time_perf_df['Date'], y=time_perf_df['Kily Performance'], mode='lines', name='Kily Performance',
-                   line=dict(color='#00A86B', width=3), fill='tonexty', fillcolor='rgba(0, 168, 107, 0.3)'))
-    fig_time_new.update_layout(title=time_title_new, template="plotly_dark", height=450,
-                               legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01))
+    fig_time_new.add_trace(go.Scatter(x=time_perf_df['Date'], y=time_perf_df['Baseline Performance'], mode='lines', name='Baseline', line=dict(color='#FF4B4B', dash='dash')))
+    fig_time_new.add_trace(go.Scatter(x=time_perf_df['Date'], y=time_perf_df['Kily Performance'], mode='lines', name='Kily Performance', line=dict(color='#00A86B', width=3), fill='tonexty', fillcolor='rgba(0, 168, 107, 0.3)'))
+    fig_time_new.update_layout(title=time_title_new, template="plotly_dark", height=450, legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01))
     st.plotly_chart(fig_time_new, use_container_width=True)
-
     st.markdown("---")
-    st.subheader("Proactive Agent Feed: Threats & Opportunities")
+    st.subheader("⚡ Proactive Agent Feed: Threats & Opportunities")
     intel_col1, intel_col2 = st.columns(2)
     with intel_col1:
-        st.info(
-            "`[OPPORTUNITY]` Social sentiment for 'late-night snacks' is up 30% in Bangalore. Suggesting a 5% budget shift to Sunfeast Dark Fantasy ads between 10 PM - 1 AM.")
-        st.warning(
-            "`[MARKET SHIFT]` Weather forecast predicts a heatwave in Delhi next week. Predictive model shows a 60% increase in demand for 'B Natural' juices. Pre-emptively increasing bid aggression.")
+        st.info("`[OPPORTUNITY]` Social sentiment for 'late-night snacks' is up 30% in Bangalore. Suggesting a 5% budget shift to Sunfeast Dark Fantasy ads between 10 PM - 1 AM.")
+        st.warning("`[MARKET SHIFT]` Weather forecast predicts a heatwave in Delhi next week. Predictive model shows a 60% increase in demand for 'B Natural' juices. Pre-emptively increasing bid aggression.")
     with intel_col2:
-        st.error(
-            "`[THREAT]` Competitor 'Britannia' has launched a new ad campaign on YouTube targeting 'healthy biscuits'. Our model predicts a 10% overlap with our 'Farmlite' audience. Recommending a counter-campaign.")
-        st.info(
-            "`[OPPORTUNITY]` High search volume detected for 'party packs' related to 'Bingo!'. Recommending launch of new ad group targeting these keywords.")
+        st.error("`[THREAT]` Competitor 'Britannia' has launched a new ad campaign on YouTube targeting 'healthy biscuits'. Our model predicts a 10% overlap with our 'Farmlite' audience. Recommending a counter-campaign.")
+        st.info("`[OPPORTUNITY]` High search volume detected for 'party packs' related to 'Bingo!'. Recommending launch of new ad group targeting these keywords.")
     st.markdown("---")
-
     gcol1, gcol2 = st.columns(2)
     with gcol1:
-        platform_title = "Platform Performance"
-        platform_perf = df_filtered.groupby('Platform').agg({'Direct Sales': 'sum', 'ROAS': 'mean'}).reset_index()
-        fig_platform = px.bar(platform_perf.sort_values('Direct Sales', ascending=False), x='Platform',
-                              y='Direct Sales', color='ROAS', color_continuous_scale='greens', title=platform_title)
-        fig_platform.update_layout(template="plotly_dark", height=400)
-        st.plotly_chart(fig_platform, use_container_width=True)
-        geo_title = "Geographical Performance"
-        city_perf = df_filtered.groupby('City').agg(
-            {'Direct Sales': 'sum', 'ROAS': 'mean', 'Spend': 'sum'}).reset_index()
-        fig_tree = px.treemap(city_perf, path=[px.Constant("All India"), 'City'], values='Direct Sales', color='ROAS',
-                              hover_data={'Spend': ':,.0f'}, color_continuous_scale='RdYlGn', title=geo_title)
-        fig_tree.update_layout(template="plotly_dark", height=400)
-        st.plotly_chart(fig_tree, use_container_width=True)
+        st.plotly_chart(px.bar(df_filtered.groupby('Platform').agg({'Direct Sales': 'sum', 'ROAS': 'mean'}).reset_index().sort_values('Direct Sales', ascending=False), x='Platform', y='Direct Sales', color='ROAS', color_continuous_scale='greens', title="Platform Performance").update_layout(template="plotly_dark", height=400), use_container_width=True)
+        st.plotly_chart(px.treemap(df_filtered.groupby('City').agg({'Direct Sales': 'sum', 'ROAS': 'mean', 'Spend': 'sum'}).reset_index(), path=[px.Constant("All India"), 'City'], values='Direct Sales', color='ROAS', hover_data={'Spend': ':,.0f'}, color_continuous_scale='RdYlGn', title="Geographical Performance").update_layout(template="plotly_dark", height=400), use_container_width=True)
     with gcol2:
-        brand_title = "Brand Contribution"
-        brand_perf = df_filtered.groupby('Brand')['Direct Sales'].sum().reset_index()
-        fig_pie = px.pie(brand_perf, names='Brand', values='Direct Sales', title=brand_title, hole=0.4)
-        fig_pie.update_layout(template="plotly_dark", height=400)
-        st.plotly_chart(fig_pie, use_container_width=True)
-        heatmap_title = "ROAS Heatmap: Brand vs. Daypart"
-        heatmap_brands = ['Aashirvaad', 'Bingo!', 'Sunfeast', 'YiPPee!']
-        heatmap_df = df_filtered[df_filtered['Brand'].isin(heatmap_brands)]
+        st.plotly_chart(px.pie(df_filtered.groupby('Brand')['Direct Sales'].sum().reset_index(), names='Brand', values='Direct Sales', title="Brand Contribution", hole=0.4).update_layout(template="plotly_dark", height=400), use_container_width=True)
+        heatmap_df = df_filtered[df_filtered['Brand'].isin(['Aashirvaad', 'Bingo!', 'Sunfeast', 'YiPPee!'])]
         if not heatmap_df.empty:
-            pivot_data = heatmap_df.pivot_table(index='Daypart', columns='Brand', values='ROAS', aggfunc='mean').fillna(
-                0)
+            pivot_data = heatmap_df.pivot_table(index='Daypart', columns='Brand', values='ROAS', aggfunc='mean').fillna(0)
             if not pivot_data.empty:
                 pivot_data = pivot_data.reindex(['Breakfast', 'Dinner', 'Lunch', 'Snacks']).dropna(how='all')
-            fig_heatmap = px.imshow(pivot_data, text_auto=".2f", aspect="auto", color_continuous_scale='RdYlGn',
-                                    title=heatmap_title)
-            fig_heatmap.update_layout(template="plotly_dark", height=400)
-            st.plotly_chart(fig_heatmap, use_container_width=True)
+                st.plotly_chart(px.imshow(pivot_data, text_auto=".2f", aspect="auto", color_continuous_scale='RdYlGn', title="ROAS Heatmap: Brand vs. Daypart").update_layout(template="plotly_dark", height=400), use_container_width=True)
 
 elif page == "Insights & Action Center":
-    st.title("Insights & Action Center")
+    st.title("💡 Insights & Action Center")
     st.markdown("The AI's logbook: real-time alerts and strategic recommendations.")
-    tab1, tab2, tab3, tab4 = st.tabs(["OOS Alerts", "Content Audit", "AI Logbook", "Raw Audit Trail"])
+    tab1, tab2, tab3, tab4 = st.tabs(["🚨 OOS Alerts", "📝 Content Audit", "🧠 AI Logbook", "📄 Raw Audit Trail"])
     with tab1:
         oos_df = df_display[df_display['Is OOS'] == True]
-        if is_kily_activated:
-            st.success(
-                f"Kily Engine is active. Only {len(oos_df)} OOS instances detected. Ad spend automatically paused.")
-        else:
-            st.error(f"Kily Engine is INACTIVE. {len(oos_df)} OOS instances detected, wasting ad spend.")
-        st.dataframe(oos_df[['Brand', 'SKU', 'Platform', 'City', 'Spend']].sort_values('Spend', ascending=False),
-                     use_container_width=True, hide_index=True)
+        if is_kily_activated: st.success(f"Kily Engine is active. Only {len(oos_df)} OOS instances detected. Ad spend automatically paused.")
+        else: st.error(f"Kily Engine is INACTIVE. {len(oos_df)} OOS instances detected, wasting ad spend.")
+        st.dataframe(oos_df[['Brand', 'SKU', 'Platform', 'City', 'Spend']].sort_values('Spend', ascending=False), use_container_width=True, hide_index=True)
     with tab2:
         content_df = df_display[df_display['Content Score'] < 8]
         if is_kily_activated:
             st.success("Kily Engine has optimized content across most SKUs.")
-            if not content_df.empty:
-                st.dataframe(content_df[['Brand', 'SKU', 'Platform', 'City', 'Content Score']],
-                             use_container_width=True, hide_index=True)
-            else:
-                st.write("No SKUs with poor content scores found.")
+            if not content_df.empty: st.dataframe(content_df[['Brand', 'SKU', 'Platform', 'City', 'Content Score']], use_container_width=True, hide_index=True)
+            else: st.write("No SKUs with poor content scores found.")
         else:
             st.warning(f"Found {len(content_df)} SKUs with poor content scores, hurting conversion rates.")
-            st.dataframe(content_df[['Brand', 'SKU', 'Platform', 'City', 'Content Score']].sort_values('Content Score'),
-                         use_container_width=True, hide_index=True)
+            st.dataframe(content_df[['Brand', 'SKU', 'Platform', 'City', 'Content Score']].sort_values('Content Score'), use_container_width=True, hide_index=True)
     with tab3:
         if is_kily_activated:
             st.markdown("##### Agentic AI's Live Log (Illustrative)")
             with st.container():
-                st.markdown(
-                    """<div class="log-container-blue"><b>11:39 AM:</b> BUDGET SHIFT - High ROAS (3.8x) detected for 'Aashirvaad Atta' in Hyderabad. Agent reallocated +10% of daily budget.</div>""",
-                    unsafe_allow_html=True)
+                st.markdown("""<div class="log-container-blue"><b>11:39 AM:</b> BUDGET SHIFT - High ROAS (3.8x) detected for 'Aashirvaad Atta' in Hyderabad. Agent reallocated +10% of daily budget.</div>""", unsafe_allow_html=True)
                 with st.expander("Show Rationale"):
-                    st.write(
-                        "Correlation analysis detected a 45% increase in searches for 'healthy meals' in Hyderabad, which has a 0.87 predictive coefficient with 'Aashirvaad Atta' sales. The agent acted to capture this emergent demand.")
-                    st.line_chart(pd.DataFrame(np.random.randn(20, 2),
-                                               columns=['"healthy meals" search volume', '"Aashirvaad Atta" sales']),
-                                  height=150)
+                    st.write("Correlation analysis detected a 45% increase in searches for 'healthy meals' in Hyderabad, which has a 0.87 predictive coefficient with 'Aashirvaad Atta' sales. The agent acted to capture this emergent demand.")
+                    st.line_chart(pd.DataFrame(np.random.randn(20, 2), columns=['"healthy meals" search volume', '"Aashirvaad Atta" sales']), height=150)
             with st.container():
-                st.markdown(
-                    """<div class="log-container-red"><b>02:00 PM:</b> OOS ALERT - 'Bingo! Tedhe Medhe' 50g OOS in Bangalore (Blinkit). Agent paused 3 associated campaigns. Prevented ~₹15,000 in wasted spend.</div>""",
-                    unsafe_allow_html=True)
+                st.markdown("""<div class="log-container-red"><b>02:00 PM:</b> OOS ALERT - 'Bingo! Tedhe Medhe' 50g OOS in Bangalore (Blinkit). Agent paused 3 associated campaigns. Prevented ~₹15,000 in wasted spend.</div>""", unsafe_allow_html=True)
                 with st.expander("Show Rationale"):
-                    st.write(
-                        "Real-time inventory API reported 0 stock for the specified SKU. Pausing campaigns prevents budget waste on unfulfillable conversions, protecting ROAS.")
+                    st.write("Real-time inventory API reported 0 stock for the specified SKU. Pausing campaigns prevents budget waste on unfulfillable conversions, protecting ROAS.")
             with st.container():
-                st.markdown(
-                    """<div class="log-container-yellow"><b>04:15 PM:</b> CONTENT AUDIT - 4 'Candyman' SKUs on Flipkart are missing video assets. Score is 6/10. Recommendation issued.</div>""",
-                    unsafe_allow_html=True)
+                st.markdown("""<div class="log-container-yellow"><b>04:15 PM:</b> CONTENT AUDIT - 4 'Candyman' SKUs on Flipkart are missing video assets. Score is 6/10. Recommendation issued.</div>""", unsafe_allow_html=True)
                 with st.expander("Show Rationale"):
-                    st.write(
-                        "Our models indicate that SKUs with video assets have an average 22% higher conversion rate. An automated ticket has been issued to the content team to address this opportunity.")
+                    st.write("Our models indicate that SKUs with video assets have an average 22% higher conversion rate. An automated ticket has been issued to the content team to address this opportunity.")
             with st.container():
-                st.markdown(
-                    """<div class="log-container-green"><b>05:00 PM:</b> CREATIVE OPTIMIZATION - New ad copy for 'Dark Fantasy' (Dinner slot) achieved a 18% higher CTR. Scaling winning variation.</div>""",
-                    unsafe_allow_html=True)
+                st.markdown("""<div class="log-container-green"><b>05:00 PM:</b> CREATIVE OPTIMIZATION - New ad copy for 'Dark Fantasy' (Dinner slot) achieved a 18% higher CTR. Scaling winning variation.</div>""", unsafe_allow_html=True)
                 with st.expander("Show Rationale"):
-                    st.write(
-                        "The winning creative (variation B) is being automatically promoted to 100% of traffic for this ad set. The losing variation has been paused to maximize click-through rate and quality score.")
+                    st.write("The winning creative (variation B) is being automatically promoted to 100% of traffic for this ad set. The losing variation has been paused to maximize click-through rate and quality score.")
                     st.bar_chart({"Variation A": 0.042, "Variation B (Winner)": 0.057}, height=200)
         else:
             st.info("Activate the Kily Engine to see the live AI log and autonomous actions.")
+    # --- NEW: HARDENED AUDIT TRAIL ---
     with tab4:
         st.subheader("Raw Event Log: Full Audit Trail")
-        st.write(
-            "This provides a clear, immutable record of a single agentic action, from event trigger to execution, ensuring full transparency and accountability for critical operations.")
+        st.write("This provides a clear, immutable record of a single agentic action, from event trigger to execution, ensuring full transparency and accountability for critical operations.")
         log_data = {
             "Timestamp": ["2025-08-16 15:42:31"],
             "SKU_ID": ["SunDarkF-101"],
@@ -539,34 +402,27 @@ elif page == "Insights & Action Center":
         """, language="json")
 
 elif page == "Strategic Campaign Planner":
-    st.title("Strategic Campaign Planner")
-    st.markdown(
-        "Define high-level goals. The Kily Engine will architect and autonomously deploy a data-backed campaign strategy.")
+    st.title("🚀 Strategic Campaign Planner")
+    st.markdown("Define high-level goals. The Kily Engine will architect and autonomously deploy a data-backed campaign strategy.")
     st.subheader("1. State Your Strategic Objective")
-    objective_text = st.text_area("Example: 'I need to increase market share for Bingo! in Delhi by 5% before Diwali.'",
-                                  height=100)
+    objective_text = st.text_area("Example: 'I need to increase market share for Bingo! in Delhi by 5% before Diwali.'", height=100)
     if st.button("Synthesize Strategy from Objective", use_container_width=True):
-        with st.spinner(
-                "Parsing natural language objective... Cross-referencing market data... Formulating preliminary parameters..."):
+        with st.spinner("Parsing natural language objective... Cross-referencing market data... Formulating preliminary parameters..."):
             time.sleep(2)
             if 'bingo' in objective_text.lower(): st.session_state.brand_select = "Bingo!"
             if 'delhi' in objective_text.lower(): st.session_state.geo_select = ["Delhi"]
             if 'market share' in objective_text.lower(): st.session_state.objective_select = "Dominate a Category"
-            if 'diwali' in objective_text.lower(): st.session_state.budget_select = 5000000
+            if 'diwali' in objective_text.lower(): st.session_state.budget_select = 5000000 
         st.success("Strategy parameters synthesized. Please review and adjust below.")
     st.markdown("---")
     st.subheader("2. Simulate Outcomes with Key Levers")
     sim_col1, sim_col2 = st.columns(2)
     with sim_col1:
-        sim_budget = st.slider("Campaign Budget (₹)", min_value=500000, max_value=10000000,
-                               value=st.session_state.get('budget_select', 2500000), step=100000)
+        sim_budget = st.slider("Campaign Budget (₹)", min_value=500000, max_value=10000000, value=st.session_state.get('budget_select', 2500000), step=100000)
     with sim_col2:
-        sim_risk = st.select_slider("Risk vs. Reward Tolerance", options=["Conservative", "Balanced", "Aggressive"],
-                                    value="Balanced")
+        sim_risk = st.select_slider("Risk vs. Reward Tolerance", options=["Conservative", "Balanced", "Aggressive"], value="Balanced")
     risk_multiplier = {"Conservative": 0.9, "Balanced": 1.0, "Aggressive": 1.15}
-    base_roas = 2.85
-    noise = np.random.uniform(-0.15, 0.15)
-    sim_roas = (base_roas + noise) * risk_multiplier[sim_risk]
+    sim_roas = (2.85 + np.random.uniform(-0.15, 0.15)) * risk_multiplier[sim_risk]
     sim_revenue = sim_budget * sim_roas
     st.markdown("##### Live Performance Forecast")
     f_col1, f_col2 = st.columns(2)
@@ -591,19 +447,15 @@ elif page == "Strategic Campaign Planner":
             platforms = st.multiselect("Platform Focus", df_display['Platform'].unique(), default=["Blinkit", "Zepto"])
             end_date = st.date_input("Campaign End Date", date.today() + timedelta(days=30))
         with col3:
-            geo_focus = st.multiselect("Geographical Focus", df_display['City'].unique(),
-                                       default=st.session_state.get('geo_select', ["Mumbai", "Delhi"]))
+            geo_focus = st.multiselect("Geographical Focus", df_display['City'].unique(), default=st.session_state.get('geo_select', ["Mumbai", "Delhi"]))
             sku = st.selectbox("Select Target SKU", df_display[df_display['Brand'] == brand]['SKU'].unique())
-        submitted = st.form_submit_button("ARCHITECT STRATEGY", use_container_width=True)
+        submitted = st.form_submit_button("⚡ ARCHITECT STRATEGY", use_container_width=True)
         if submitted:
-            with st.spinner(
-                    "Analyzing historical data... Running multi-objective genetic algorithm... Simulating market response..."):
+            with st.spinner("Analyzing historical data... Running multi-objective genetic algorithm... Simulating market response..."):
                 time.sleep(2.5)
             st.session_state.plan_architected = True
             st.session_state.plan_deployed = False
-            st.session_state.params = {"objective": objective, "brand": brand, "budget": budget, "geo_focus": geo_focus,
-                                       "platforms": platforms, "sku": sku, "start_date": start_date,
-                                       "end_date": end_date}
+            st.session_state.params = {"objective": objective, "brand": brand, "budget": budget, "geo_focus": geo_focus, "platforms": platforms, "sku": sku, "start_date": start_date, "end_date": end_date}
             st.rerun()
     if st.session_state.plan_architected and not st.session_state.plan_deployed:
         st.subheader("4. AI-Generated Strategic Brief & Deployment Plan")
@@ -611,26 +463,14 @@ elif page == "Strategic Campaign Planner":
         plan_col1, plan_col2 = st.columns([2, 3])
         with plan_col1:
             st.markdown("##### AI-Recommended Platform Allocation")
-            df_split = pd.DataFrame({'Platform': st.session_state.params['platforms'],
-                                     'Allocation': np.random.dirichlet(
-                                         np.ones(len(st.session_state.params['platforms']))) * 100})
-            fig = px.pie(df_split, names='Platform', values='Allocation', hole=0.5)
-            fig.update_layout(height=300, template="plotly_dark", margin=dict(l=20, r=20, t=30, b=20),
-                              legend_title_text='')
-            st.plotly_chart(fig, use_container_width=True)
+            df_split = pd.DataFrame({'Platform': st.session_state.params['platforms'], 'Allocation': np.random.dirichlet(np.ones(len(st.session_state.params['platforms']))) * 100})
+            st.plotly_chart(px.pie(df_split, names='Platform', values='Allocation', hole=0.5).update_layout(height=300, template="plotly_dark", margin=dict(l=20, r=20, t=30, b=20), legend_title_text=''), use_container_width=True)
             st.markdown("##### Recommended Spend Pacing")
             days = (st.session_state.params['end_date'] - st.session_state.params['start_date']).days
             if days > 0:
-                pacing_dates = pd.to_datetime(
-                    pd.date_range(start=st.session_state.params['start_date'], end=st.session_state.params['end_date']))
-                x = np.linspace(-2, 2, len(pacing_dates))
-                y = np.exp(-x ** 2)
-                pacing_spend = (y / y.sum()) * st.session_state.params['budget']
-                pacing_df = pd.DataFrame({'Date': pacing_dates, 'Daily Spend': pacing_spend})
-                fig_pacing = px.area(pacing_df, x='Date', y='Daily Spend')
-                fig_pacing.update_layout(height=300, template="plotly_dark", margin=dict(l=20, r=20, t=30, b=20),
-                                         yaxis_title=None, xaxis_title=None)
-                st.plotly_chart(fig_pacing, use_container_width=True)
+                pacing_dates = pd.to_datetime(pd.date_range(start=st.session_state.params['start_date'], end=st.session_state.params['end_date']))
+                pacing_spend = (np.exp(-np.linspace(-2, 2, len(pacing_dates))**2) / np.exp(-np.linspace(-2, 2, len(pacing_dates))**2).sum()) * st.session_state.params['budget']
+                st.plotly_chart(px.area(pd.DataFrame({'Date': pacing_dates, 'Daily Spend': pacing_spend}), x='Date', y='Daily Spend').update_layout(height=300, template="plotly_dark", margin=dict(l=20, r=20, t=30, b=20), yaxis_title=None, xaxis_title=None), use_container_width=True)
         with plan_col2:
             st.markdown("##### Kily's Agentic Rationale & Actions")
             with st.expander("Final Performance Forecast", expanded=True):
@@ -639,27 +479,20 @@ elif page == "Strategic Campaign Planner":
                 st.metric("Projected Revenue", f"₹{projected_revenue:,.0f}")
                 st.metric("Projected ROAS", f"{projected_roas:.2f}x")
             with st.expander("Kily's 3-Phase Action Plan", expanded=True):
-                st.markdown("###### Phase 1: Awareness & Reach (Days 1-7)")
-                st.write("- **Focus:** Maximize impressions and clicks on high-reach platforms.")
-                st.markdown("###### Phase 2: High-Intent Conversion (Days 8-21)")
-                st.write("- **Focus:** Drive conversions and improve ROAS.")
-                st.markdown("###### Phase 3: Optimization & ROAS Maximization (Days 22-30)")
-                st.write("- **Focus:** Squeeze maximum efficiency from the remaining budget.")
+                st.markdown("###### Phase 1: Awareness & Reach (Days 1-7)\n- **Focus:** Maximize impressions and clicks on high-reach platforms.")
+                st.markdown("###### Phase 2: High-Intent Conversion (Days 8-21)\n- **Focus:** Drive conversions and improve ROAS.")
+                st.markdown("###### Phase 3: Optimization & ROAS Maximization (Days 22-30)\n- **Focus:** Squeeze maximum efficiency from the remaining budget.")
             with st.expander("AI Rationale & Risk Mitigation"):
-                st.write(
-                    "**Rationale:** This strategy balances initial awareness with a strong mid-campaign push to maximize conversions and ROAS, tapering off as the campaign concludes to optimize remaining budget.")
+                st.write("**Rationale:** This strategy balances initial awareness with a strong mid-campaign push to maximize conversions and ROAS, tapering off as the campaign concludes to optimize remaining budget.")
                 st.write("**Risk:** Potential for competitor price wars to suppress ROAS mid-campaign.")
-                st.write(
-                    "**Mitigation:** Kily's Price War Monitor will detect competitor promotions in real-time and autonomously deploy counter-measures.")
+                st.write("**Mitigation:** Kily's Price War Monitor will detect competitor promotions in real-time and autonomously deploy counter-measures.")
         st.markdown("---")
         _, d_col1, d_col2, _ = st.columns([1, 2, 2, 1])
-        if d_col1.button("DEPLOY AUTONOMOUSLY", use_container_width=True):
-            with st.spinner(
-                    "Instantiating sub-agents... Propagating parameters to RL Bidding Engine... Verifying live deployment..."):
-                time.sleep(2.5)
+        if d_col1.button("✅ DEPLOY AUTONOMOUSLY", use_container_width=True):
+            with st.spinner("Instantiating sub-agents... Propagating parameters to RL Bidding Engine... Verifying live deployment..."): time.sleep(2.5)
             st.session_state.plan_deployed = True
             st.rerun()
-        if d_col2.button("MODIFY PARAMETERS", use_container_width=True, type="secondary"):
+        if d_col2.button("✍️ MODIFY PARAMETERS", use_container_width=True, type="secondary"):
             st.session_state.plan_architected = False
             st.rerun()
     if st.session_state.plan_deployed:
@@ -673,7 +506,7 @@ elif page == "Strategic Campaign Planner":
             st.rerun()
 
 elif page == "Competitive Intelligence":
-    st.title("Competitive Intelligence")
+    st.title("⚔️ Competitive Intelligence")
     st.markdown("Monitor the market, track competitors, and **win the digital shelf.**")
     st.subheader("The Keyword Battleground")
     st.markdown("Measuring rank for: **Sunfeast Dark Fantasy**")
@@ -691,56 +524,36 @@ elif page == "Competitive Intelligence":
         st.markdown("---")
         sov_title = "Share of Voice: **Kily Engine Dominating Search**" if is_kily_activated else "Share of Voice: **Losing the Keyword War**"
         st.subheader(sov_title)
-        competitors = ["Britannia", "Parle", "Cadbury"]
-        sov_data_old = {"Brand": ["Sunfeast (Kily OFF)"] + competitors, "SoV": [15, 35, 30, 20]}
-        sov_data_kily = {"Brand": ["Sunfeast (Kily ON)"] + competitors, "SoV": [45, 25, 20, 10]}
-        df_sov = pd.DataFrame(sov_data_kily if is_kily_activated else sov_data_old)
-        fig = px.bar(df_sov.sort_values('SoV', ascending=False), x="Brand", y="SoV", color="Brand",
-                     color_discrete_map={"Sunfeast (Kily ON)": "#00A86B", "Sunfeast (Kily OFF)": "#FF4B4B"}, text='SoV')
-        fig.update_layout(template="plotly_dark", yaxis_title="Share of Voice (%)", xaxis_title="")
-        fig.update_traces(texttemplate='%{text}%', textposition='outside')
-        st.plotly_chart(fig, use_container_width=True)
+        df_sov = pd.DataFrame((lambda is_kily: {"Brand": ["Sunfeast (Kily ON)"] + ["Britannia", "Parle", "Cadbury"], "SoV": [45, 25, 20, 10]} if is_kily else {"Brand": ["Sunfeast (Kily OFF)"] + ["Britannia", "Parle", "Cadbury"], "SoV": [15, 35, 30, 20]})(is_kily_activated))
+        st.plotly_chart(px.bar(df_sov.sort_values('SoV', ascending=False), x="Brand", y="SoV", color="Brand", color_discrete_map={"Sunfeast (Kily ON)": "#00A86B", "Sunfeast (Kily OFF)": "#FF4B4B"}, text='SoV').update_layout(template="plotly_dark", yaxis_title="Share of Voice (%)", xaxis_title="").update_traces(texttemplate='%{text}%', textposition='outside'), use_container_width=True)
     st.markdown("---")
     st.subheader("Live Competitor Product & Pricing Analysis")
-    platforms_ci = ["Blinkit", "Zepto", "Instamart"]
-    competitors_ci = ['Competitor A', 'Competitor B', 'Competitor C']
     ci_col1, ci_col2 = st.columns([2, 3])
     with ci_col1:
         st.markdown("##### Prices For Cream Biscuits")
-        st.dataframe(pd.DataFrame(
-            [{'Competitor': c, **{p: f"₹{np.random.uniform(25, 45):.1f}" for p in platforms_ci}} for c in
-             competitors_ci]), use_container_width=True, hide_index=True)
+        st.dataframe(pd.DataFrame([{'Competitor': c, **{p: f"₹{np.random.uniform(25, 45):.1f}" for p in ["Blinkit", "Zepto", "Instamart"]}} for c in ['Competitor A', 'Competitor B', 'Competitor C']]), use_container_width=True, hide_index=True)
         st.markdown("##### Prices For Instant Noodles")
-        st.dataframe(pd.DataFrame(
-            [{'Competitor': c, **{p: f"₹{np.random.uniform(10, 15):.1f}" for p in platforms_ci}} for c in
-             competitors_ci]), use_container_width=True, hide_index=True)
+        st.dataframe(pd.DataFrame([{'Competitor': c, **{p: f"₹{np.random.uniform(10, 15):.1f}" for p in ["Blinkit", "Zepto", "Instamart"]}} for c in ['Competitor A', 'Competitor B', 'Competitor C']]), use_container_width=True, hide_index=True)
     with ci_col2:
         st.markdown("##### Product Traffic (Last 24h)")
-        st.bar_chart(pd.DataFrame(
-            {"Blinkit": np.random.randint(2000, 10000, 5), "Zepto": np.random.randint(2000, 10000, 5),
-             "Instamart": np.random.randint(2000, 10000, 5)}, index=['Biscuits', 'Noodles', 'Chips', 'Juice', 'Atta']),
-                     height=250)
+        st.bar_chart(pd.DataFrame({"Blinkit": np.random.randint(2000, 10000, 5), "Zepto": np.random.randint(2000, 10000, 5), "Instamart": np.random.randint(2000, 10000, 5)}, index=['Biscuits', 'Noodles', 'Chips', 'Juice', 'Atta']), height=250)
         st.markdown("##### Average Discount by Brand")
-        st.bar_chart(pd.DataFrame({"Avg Discount (%)": np.random.uniform(2, 18, 7)},
-                                  index=['Aashirvaad', 'Sunfeast', 'Bingo!', 'YiPPee!', 'Competitor A', 'Competitor B',
-                                         'Competitor C']), height=250)
+        st.bar_chart(pd.DataFrame({"Avg Discount (%)": np.random.uniform(2, 18, 7)}, index=['Aashirvaad', 'Sunfeast', 'Bingo!', 'YiPPee!', 'Competitor A', 'Competitor B', 'Competitor C']), height=250)
     st.markdown("---")
     st.subheader("Price War Monitor (Real-Time Simulated Alerts)")
     st.warning("`ALERT:` Britannia running a 2-hour 15% off promotion on 'Bourbon' on Zepto in **Mumbai**.")
     st.info("`KILY ACTION:` A targeted 10% off counter-promotion on 'Dark Fantasy' has been **autonomously deployed**.")
     st.warning("`ALERT:` Cadbury running a 'Buy 2 Get 1 Free' on 'Oreo' on Blinkit in **Delhi**.")
-    st.info(
-        "`KILY ACTION:` Kily advises against matching. Instead, it has **reallocated ₹50,000** to outbid them on high-intent keywords.")
+    st.info("`KILY ACTION:` Kily advises against matching. Instead, it has **reallocated ₹50,000** to outbid them on high-intent keywords.")
 
 elif page == "SKU Deep-Dive":
-    st.title("SKU Deep-Dive & Digital Shelf Audit")
+    st.title("🔬 SKU Deep-Dive & Digital Shelf Audit")
     st.markdown("Analyze individual product performance and make the problem of poor content **painfully visible.**")
     dcol1, dcol2 = st.columns(2)
     with dcol1:
         brand_select = st.selectbox("Select a Brand to Analyze", df_display['Brand'].unique())
     with dcol2:
-        sku_select = st.selectbox("Select a Specific SKU",
-                                  df_display[df_display['Brand'] == brand_select]['SKU'].unique())
+        sku_select = st.selectbox("Select a Specific SKU", df_display[df_display['Brand'] == brand_select]['SKU'].unique())
     st.markdown("---")
     if sku_select:
         sku_df = df_display[df_display['SKU'] == sku_select]
@@ -751,44 +564,20 @@ elif page == "SKU Deep-Dive":
             st.markdown(f"**Your Shelf (Kily Engine {'ON' if is_kily_activated else 'OFF'})**")
             st.markdown(f"**SKU:** *{sku_select}*")
             avg_score = sku_df['Content Score'].mean()
-            st.metric("Content Score", f"{avg_score:.1f}/10",
-                      delta="Optimized by AI" if avg_score > 8 else "Needs Improvement",
-                      delta_color="normal" if avg_score > 8 else "inverse")
-            if avg_score < 8:
-                st.error("**AI Recommendations:** Missing Video Asset. Short Description. Only 3 images.")
-            else:
-                st.success(
-                    "**Analysis:** Content is fully optimized with rich media, A+ descriptions, and sufficient imagery.")
+            st.metric("Content Score", f"{avg_score:.1f}/10", delta="Optimized by AI" if avg_score > 8 else "Needs Improvement", delta_color="normal" if avg_score > 8 else "inverse")
+            if avg_score < 8: st.error("**AI Recommendations:** Missing Video Asset. Short Description. Only 3 images.")
+            else: st.success("**Analysis:** Content is fully optimized with rich media, A+ descriptions, and sufficient imagery.")
         with shelf2:
             st.markdown(f"**Competitor Shelf ({competitor['name']})**")
             st.markdown(f"**SKU:** *{competitor['sku']}*")
             st.metric("Content Score", "9.2/10", delta="Market Leader", delta_color="off")
-            st.success(
-                "**Analysis:** Rich video content. Detailed A+ description. 7 high-res images. They are winning.")
+            st.success("**Analysis:** Rich video content. Detailed A+ description. 7 high-res images. They are winning.")
         st.markdown("---")
-        st.subheader("AI-Generated Strategic SWOT Analysis")
+        st.subheader("🤖 AI-Generated Strategic SWOT Analysis")
         swot_data = {
-            "Dark Fantasy Choco Fills": {
-                "S": ["High brand recall", "Strong ROAS in 'Snacks' daypart", "Excellent content score (9.5/10)"],
-                "W": ["Underperforming in Hyderabad", "Higher CPA than competitor 'Bourbon'"],
-                "O": ["High search volume for 'choco-filled cookies' not fully captured",
-                      "Opportunity for combo-pack promotions"],
-                "T": ["'Britannia Bourbon' running aggressive discounts", "Emergence of D2C premium cookie brands"]
-            },
-            "Magic Masala Noodles": {
-                "S": ["Market leader in taste preference surveys", "Strong performance on Quick-Commerce platforms"],
-                "W": ["Lower share-of-voice compared to 'Maggi'", "Content score needs video assets"],
-                "O": ["Growing demand for 'spicy noodles' keyword", "Collaborate with influencers for recipe videos"],
-                "T": ["'Maggi' has a dominant market position", "New instant noodle brands entering the market"]
-            },
-            "Bingo! Mad Angles": {
-                "S": ["Unique product shape and texture", "High engagement on social media campaigns"],
-                "W": ["Inconsistent stock levels in Bangalore", "Lower repeat purchase rate than 'Lays'"],
-                "O": ["Target 'party snack' and 'combo offer' keywords", "Potential for new flavor launches"],
-                "T": ["'Lays' has a massive distribution advantage", "Health-conscious snacking trend"]
-            }
-        }
-
+            "Dark Fantasy Choco Fills": {"S": ["High brand recall", "Strong ROAS in 'Snacks' daypart", "Excellent content score (9.5/10)"], "W": ["Underperforming in Hyderabad", "Higher CPA than competitor 'Bourbon'"], "O": ["High search volume for 'choco-filled cookies' not fully captured", "Opportunity for combo-pack promotions"], "T": ["'Britannia Bourbon' running aggressive discounts", "Emergence of D2C premium cookie brands"]},
+            "Magic Masala Noodles": {"S": ["Market leader in taste preference surveys", "Strong performance on Quick-Commerce platforms"], "W": ["Lower share-of-voice compared to 'Maggi'", "Content score needs video assets"], "O": ["Growing demand for 'spicy noodles' keyword", "Collaborate with influencers for recipe videos"], "T": ["'Maggi' has a dominant market position", "New instant noodle brands entering the market"]},
+            "Bingo! Mad Angles": {"S": ["Unique product shape and texture", "High engagement on social media campaigns"], "W": ["Inconsistent stock levels in Bangalore", "Lower repeat purchase rate than 'Lays'"], "O": ["Target 'party snack' and 'combo offer' keywords", "Potential for new flavor launches"], "T": ["'Lays' has a massive distribution advantage", "Health-conscious snacking trend"]} }
         swot = swot_data.get(sku_select)
         if swot:
             swot_c1, swot_c2, swot_c3, swot_c4 = st.columns(4)
@@ -807,20 +596,12 @@ elif page == "SKU Deep-Dive":
         else:
             st.info("Detailed SWOT analysis for this specific SKU is being computed. Check back later.")
         st.markdown("---")
-
         hcol1, hcol2 = st.columns([2, 3])
         with hcol1:
             st.subheader("ROAS Heatmap")
             heatmap_data = sku_df.pivot_table(index='Daypart', columns='Brand', values='ROAS', aggfunc='mean').fillna(0)
-            title_heatmap = f"ROAS Hotspots: Kily Engine Active" if is_kily_activated else f"ROAS Hotspots (Baseline)"
-            fig = px.imshow(heatmap_data, text_auto=".2f", aspect="auto", color_continuous_scale='Greens',
-                            title=title_heatmap)
-            fig.update_layout(template="plotly_dark", height=400)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(px.imshow(heatmap_data, text_auto=".2f", aspect="auto", color_continuous_scale='Greens', title=f"ROAS Hotspots: Kily Engine Active" if is_kily_activated else f"ROAS Hotspots (Baseline)").update_layout(template="plotly_dark", height=400), use_container_width=True)
         with hcol2:
             st.subheader(f"ROAS Trend")
-            title_trend = f"Kily Drives Consistent ROAS" if is_kily_activated else f"Volatile Daily ROAS (Baseline)"
             roas_trend_df = sku_df.groupby(sku_df['Date'].dt.date)['ROAS'].mean().reset_index()
-            fig = px.line(roas_trend_df, x='Date', y='ROAS', title=title_trend, markers=True)
-            fig.update_layout(template="plotly_dark", height=400)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(px.line(roas_trend_df, x='Date', y='ROAS', title=f"Kily Drives Consistent ROAS" if is_kily_activated else f"Volatile Daily ROAS (Baseline)", markers=True).update_layout(template="plotly_dark", height=400), use_container_width=True)
